@@ -230,7 +230,7 @@ public:
   //! Find endogenous variables not used in model
   set<int> findUnusedEndogenous();
   //! Find exogenous variables not used in model
-  set<int> findUnusedExogenous();
+  vector<int> findUnusedExogenous();
 
   //! Copies a dynamic model (only the equations)
   /*! It assumes that the dynamic model given in argument has just been allocated */
@@ -240,6 +240,9 @@ public:
   void computeRamseyPolicyFOCs(const StaticModel &static_model);
   //! Replaces the model equations in dynamic_model with those in this model
   void replaceMyEquations(DynamicModel &dynamic_model) const;
+
+  //! Mark variables/params used in model in the symbol table
+  void markUsedVarsInModel() const;
 
   //! Adds an equation marked as [static]
   void addStaticOnlyEquation(expr_t eq, int lineno);

@@ -335,6 +335,11 @@ NumConstNode::collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > 
 {
 }
 
+void
+NumConstNode::markUsedVars() const
+{
+}
+
 pair<int, expr_t >
 NumConstNode::normalizeEquation(int var_endo, vector<pair<int, pair<expr_t, expr_t> > > &List_of_Op_RHS) const
 {
@@ -896,6 +901,12 @@ VariableNode::computeTemporaryTerms(map<expr_t, int> &reference_count,
 {
   if (type == eModelLocalVariable)
     datatree.local_variables_table[symb_id]->computeTemporaryTerms(reference_count, temporary_terms, first_occurence, Curr_block, v_temporary_terms, equation);
+}
+
+void
+VariableNode::markUsedVars() const
+{
+  datatree.symbol_table.markAsUsed(symb_id);
 }
 
 void
@@ -2037,6 +2048,12 @@ UnaryOpNode::compile(ostream &CompileCode, unsigned int &instruction_number,
 }
 
 void
+UnaryOpNode::markUsedVars() const
+{
+  arg->markUsedVars();
+}
+
+void
 UnaryOpNode::collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const
 {
   arg->collectDynamicVariables(type_arg, result);
@@ -3115,6 +3132,13 @@ BinaryOpNode::compileExternalFunctionOutput(ostream &CompileCode, unsigned int &
 }
 
 void
+BinaryOpNode::markUsedVars() const
+{
+  arg1->markUsedVars();
+  arg2->markUsedVars();
+}
+
+void
 BinaryOpNode::collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const
 {
   arg1->collectDynamicVariables(type_arg, result);
@@ -4093,6 +4117,14 @@ TrinaryOpNode::compileExternalFunctionOutput(ostream &CompileCode, unsigned int 
 }
 
 void
+TrinaryOpNode::markUsedVars() const
+{
+  arg1->markUsedVars();
+  arg2->markUsedVars();
+  arg3->markUsedVars();
+}
+
+void
 TrinaryOpNode::collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const
 {
   arg1->collectDynamicVariables(type_arg, result);
@@ -4388,6 +4420,14 @@ AbstractExternalFunctionNode::compileExternalFunctionArguments(ostream &CompileC
     (*it)->compile(CompileCode, instruction_number, lhs_rhs, temporary_terms, map_idx,
                    dynamic, steady_dynamic, tef_terms);
   return (arguments.size());
+}
+
+void
+AbstractExternalFunctionNode::markUsedVars() const
+{
+  for (vector<expr_t>::const_iterator it = arguments.begin();
+       it != arguments.end(); it++)
+    (*it)->markUsedVars();
 }
 
 void

@@ -291,21 +291,6 @@ ModFile::checkPass()
       cerr << ") also appear in the expressions defining the variance/covariance matrix of shocks; this is not allowed." << endl;
       exit(EXIT_FAILURE);
     }
-
-  // Check if some exogenous is not used in the model block
-  set<int> unusedExo = dynamic_model.findUnusedExogenous();
-  if (unusedExo.size() > 0)
-    {
-      warnings << "WARNING: some exogenous (";
-      for (set<int>::const_iterator it = unusedExo.begin();
-           it != unusedExo.end(); )
-        {
-          warnings << symbol_table.getName(*it);
-          if (++it != unusedExo.end())
-            warnings << ", ";
-        }
-      warnings << ") are declared but not used in the model. This may lead to crashes or unexpected behaviour." << endl;
-    }
 }
 
 void
@@ -313,6 +298,23 @@ ModFile::transformPass(bool nostrict)
 {
   // Save the original model (must be done before any model transformations by preprocessor)
   dynamic_model.cloneDynamic(original_model);
+
+  dynamic_model.markUsedVarsInModel();
+  // Check an exogenous variable is not used in the model block
+  vector<int> unusedExo = dynamic_model.findUnusedExogenous();
+  if (unusedExo.size() > 0)
+    {
+      warnings << "WARNING: the following exogenous variables are declared "
+               << "but not used in the model and will be removed:  ";
+      for (vector<int>::const_iterator it = unusedExo.begin();
+           it != unusedExo.end(); )
+        {
+          warnings << symbol_table.getName(*it);
+          if (++it != unusedExo.end())
+            warnings << ", ";
+        }
+      warnings << endl;
+    }
 
   if (nostrict)
     {

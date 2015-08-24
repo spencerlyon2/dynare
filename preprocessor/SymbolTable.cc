@@ -78,6 +78,7 @@ SymbolTable::addSymbol(const string &name, SymbolType type, const string &tex_na
   name_table.push_back(name);
   tex_name_table.push_back(final_tex_name);
   long_name_table.push_back(final_long_name);
+  used_in_model.push_back(false);
 
   return id;
 }
@@ -106,8 +107,13 @@ SymbolTable::freeze() throw (FrozenException)
           endo_ids.push_back(i);
           break;
         case eExogenous:
-          tsi = exo_ids.size();
-          exo_ids.push_back(i);
+          if (!used_in_model[i])
+            tsi = -1;
+          else
+            {
+              tsi = exo_ids.size();
+              exo_ids.push_back(i);
+            }
           break;
         case eExogenousDet:
           tsi = exo_det_ids.size();
@@ -135,6 +141,16 @@ SymbolTable::changeType(int id, SymbolType newtype) throw (UnknownSymbolIDExcept
     throw UnknownSymbolIDException(id);
 
   type_table[id] = newtype;
+}
+
+vector<int>
+SymbolTable::getUnusedExo() const throw (NotYetFrozenException)
+{
+  vector<int> unusedExo;
+  for (int i = 0; i < used_in_model.size(); i++)
+    if (!used_in_model[i] && getType(i) == eExogenous)
+      unusedExo.push_back(i);
+  return unusedExo;
 }
 
 int

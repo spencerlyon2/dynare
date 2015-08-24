@@ -211,6 +211,9 @@ public:
                                              const map_idx_t &map_idx, bool dynamic, bool steady_dynamic,
                                              deriv_node_temp_terms_t &tef_terms) const;
 
+  //! Marks variables as used in the symbol table
+  virtual void markUsedVars() const = 0;
+
   //! Computes the set of all variables of a given symbol type in the expression (with information on lags)
   /*!
     Variables are stored as integer pairs of the form (symb_id, lag).
@@ -447,6 +450,7 @@ public:
   virtual void prepareForDerivation();
   virtual void writeOutput(ostream &output, ExprNodeOutputType output_type, const temporary_terms_t &temporary_terms, deriv_node_temp_terms_t &tef_terms) const;
   virtual bool containsExternalFunction() const;
+  virtual void markUsedVars() const;
   virtual void collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const;
   virtual void collectTemporary_terms(const temporary_terms_t &temporary_terms, temporary_terms_inuse_t &temporary_terms_inuse, int Curr_Block) const;
   virtual double eval(const eval_context_t &eval_context) const throw (EvalException, EvalExternalFunctionException);
@@ -493,6 +497,7 @@ public:
   virtual void prepareForDerivation();
   virtual void writeOutput(ostream &output, ExprNodeOutputType output_type, const temporary_terms_t &temporary_terms, deriv_node_temp_terms_t &tef_terms) const;
   virtual bool containsExternalFunction() const;
+  virtual void markUsedVars() const;
   virtual void collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const;
   virtual void computeTemporaryTerms(map<expr_t, int> &reference_count,
                                      temporary_terms_t &temporary_terms,
@@ -573,6 +578,7 @@ public:
                                      int Curr_block,
                                      vector< vector<temporary_terms_t> > &v_temporary_terms,
                                      int equation) const;
+  virtual void markUsedVars() const;
   virtual void collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const;
   virtual void collectTemporary_terms(const temporary_terms_t &temporary_terms, temporary_terms_inuse_t &temporary_terms_inuse, int Curr_Block) const;
   static double eval_opcode(UnaryOpcode op_code, double v) throw (EvalException, EvalExternalFunctionException);
@@ -652,6 +658,7 @@ public:
                                      int Curr_block,
                                      vector< vector<temporary_terms_t> > &v_temporary_terms,
                                      int equation) const;
+  virtual void markUsedVars() const;
   virtual void collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const;
   virtual void collectTemporary_terms(const temporary_terms_t &temporary_terms, temporary_terms_inuse_t &temporary_terms_inuse, int Curr_Block) const;
   static double eval_opcode(double v1, BinaryOpcode op_code, double v2, int derivOrder) throw (EvalException, EvalExternalFunctionException);
@@ -747,6 +754,7 @@ public:
                                      int Curr_block,
                                      vector< vector<temporary_terms_t> > &v_temporary_terms,
                                      int equation) const;
+  virtual void markUsedVars() const;
   virtual void collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const;
   virtual void collectTemporary_terms(const temporary_terms_t &temporary_terms, temporary_terms_inuse_t &temporary_terms_inuse, int Curr_Block) const;
   static double eval_opcode(double v1, TrinaryOpcode op_code, double v2, double v3) throw (EvalException, EvalExternalFunctionException);
@@ -819,6 +827,7 @@ public:
                                      int Curr_block,
                                      vector< vector<temporary_terms_t> > &v_temporary_terms,
                                      int equation) const = 0;
+  virtual void markUsedVars() const;
   virtual void collectDynamicVariables(SymbolType type_arg, set<pair<int, int> > &result) const;
   virtual void collectTemporary_terms(const temporary_terms_t &temporary_terms, temporary_terms_inuse_t &temporary_terms_inuse, int Curr_Block) const;
   virtual double eval(const eval_context_t &eval_context) const throw (EvalException, EvalExternalFunctionException);

@@ -98,6 +98,8 @@ private:
   vector<string> long_name_table;
   //! Maps IDs to types
   vector<SymbolType> type_table;
+  //! Maps IDs to whether or not they're used in the model block
+  vector<bool> used_in_model;
 
   //! Maps symbol IDs to type specific IDs
   vector<int> type_specific_ids;
@@ -269,6 +271,10 @@ public:
   inline int getTypeSpecificID(int id) const throw (UnknownSymbolIDException, NotYetFrozenException);
   //! Get type specific ID (by symbol name)
   inline int getTypeSpecificID(const string &name) const throw (UnknownSymbolNameException, NotYetFrozenException);
+  //! Mark the given symbol as used in the model
+  inline void markAsUsed(int id) throw (FrozenException);
+  //! Return a vector of unused exogenous variables
+  vector<int> getUnusedExo() const throw (NotYetFrozenException);
   //! Get number of endogenous variables
   inline int endo_nbr() const throw (NotYetFrozenException);
   //! Get number of exogenous variables
@@ -371,6 +377,15 @@ SymbolTable::getID(const string &name) const throw (UnknownSymbolNameException)
     throw UnknownSymbolNameException(name);
 }
 
+inline void
+SymbolTable::markAsUsed(int id) throw (FrozenException)
+{
+  if (frozen)
+    throw FrozenException();
+
+  used_in_model[id] = true;
+}
+
 inline int
 SymbolTable::getTypeSpecificID(int id) const throw (UnknownSymbolIDException, NotYetFrozenException)
 {
@@ -379,6 +394,13 @@ SymbolTable::getTypeSpecificID(int id) const throw (UnknownSymbolIDException, No
 
   if (id < 0 || id >= size)
     throw UnknownSymbolIDException(id);
+
+  if (type_specific_ids[id] < 0 && getType(id) == eExogenous)
+    {
+      cerr << "Error: You tried to access an exogenous variable that was not used in the model block: "
+           << getName(id) << endl;
+      exit(EXIT_FAILURE);
+    }
 
   return type_specific_ids[id];
 }
