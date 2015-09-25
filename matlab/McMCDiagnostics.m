@@ -69,6 +69,46 @@ if issue_an_error_message
     error('Estimation::mcmc::diagnostics: I cannot proceed because some MCMC files are missing. Check your MCMC files...')
 end
 
+% compute inefficiency factor
+FirstMhFile = record.KeepedDraws.FirstMhFile;
+FirstLine = record.KeepedDraws.FirstLine;
+TotalNumberOfMhFiles = sum(record.MhDraws(:,2));
+TotalNumberOfMhDraws = sum(record.MhDraws(:,1));
+FirstMhFile = record.KeepedDraws.FirstMhFile;
+NumberOfDraws = TotalNumberOfMhDraws-floor(options_.mh_drop*TotalNumberOfMhDraws);
+
+param_name=[];
+for jj=1:npar   
+    param_name = strvcat(param_name,get_the_name(jj,options_.TeX,M_,estim_params_,options_));
+end
+fprintf('\nMCMC Inefficiency factors per block.\n');
+IFAC_header={'Parameter'};
+print_string=['%',num2str(size(param_name,2)+3),'s'];
+print_string_header=['%',num2str(size(param_name,2)+3),'s'];
+for j=1:nblck,
+    IFAC_header=[IFAC_header, {['block ' int2str(j)]}];
+    print_string=[print_string,' \t %12.3f'];
+    print_string_header=[print_string_header,' \t %12s'];
+end
+print_string=[print_string,'\n'];
+print_string_header=[print_string_header,'\n'];
+fprintf(print_string_header,IFAC_header{1,:});
+
+for jj=1:npar   
+    Draws = GetAllPosteriorDraws(jj,FirstMhFile,FirstLine,TotalNumberOfMhFiles,NumberOfDraws);
+    Draws = reshape(Draws,[NumberOfDraws nblck]);
+    Nc = min(1000, NumberOfDraws/2);
+    for ll=1:nblck
+        Ifac(ll,jj) = mcmc_ifac(Draws(:,ll), Nc);
+    end
+    tmp = num2cell(Ifac(:,jj));
+    fprintf(print_string,param_name(jj,:),tmp{:})
+end
+skipline()
+record.InefficiencyFactorsPerBlock = Ifac;
+update_last_mh_history_file(MetropolisFolder, ModelName, record);
+
+
 PastDraws = sum(record.MhDraws,1);
 LastFileNumber = PastDraws(2);
 LastLineNumber = record.MhDraws(end,3);
@@ -89,10 +129,6 @@ if nblck == 1 % Brooks and Gelman tests need more than one block
     first_obs_begin_sample = max(1,ceil(options_.mh_drop*NumberOfDraws));
     last_obs_begin_sample = first_obs_begin_sample+round(options_.convergence.geweke.geweke_interval(1)*NumberOfDraws*(1-options_.mh_drop));
     first_obs_end_sample = first_obs_begin_sample+round(options_.convergence.geweke.geweke_interval(2)*NumberOfDraws*(1-options_.mh_drop));
-    param_name=[];
-    for jj=1:npar
-        param_name = strvcat(param_name,get_the_name(jj,options_.TeX,M_,estim_params_,options_));
-    end
     fprintf('\nGeweke (1992) Convergence Tests, based on means of draws %d to %d vs %d to %d.\n',first_obs_begin_sample,last_obs_begin_sample,first_obs_end_sample,NumberOfDraws);
     fprintf('p-values are for Chi2-test for equality of means.\n');    
     Geweke_header={'Parameter', 'Post. Mean', 'Post. Std', 'p-val No Taper'};
@@ -419,3 +455,4 @@ if TeX && any(strcmp('eps',cellstr(options_.graph_format)))
     fprintf(fidTeX,'% End Of TeX file.');
     fclose(fidTeX);
 end
+
