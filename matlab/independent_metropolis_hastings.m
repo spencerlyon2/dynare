@@ -90,9 +90,6 @@ else
     if (options_.load_mh_file~=0) && any(fline>1) ,
         NamFileInput(length(NamFileInput)+1,:)={[MetropolisFolder filesesep],[ModelName '_mh' int2str(NewFile(1)) '_blck*.mat']};
     end
-    if exist([ModelName '_optimal_mh_scale_parameter.mat'])
-        NamFileInput(length(NamFileInput)+1,:)={'',[ModelName '_optimal_mh_scale_parameter.mat']};
-    end
     % from where to get back results
     %     NamFileOutput(1,:) = {[M_.dname,'/metropolis/'],'*.*'};
     [fout, nBlockPerCPU, totCPU] = masterParallel(options_.parallel, fblck, nblck,NamFileInput,'independent_metropolis_hastings_core', localVars, globalVars, options_.parallel_info);
