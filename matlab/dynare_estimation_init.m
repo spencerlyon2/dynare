@@ -516,6 +516,19 @@ if options_.analytic_derivation,
     end
 end
 
+% load optimal_mh_scale parameter if previous run was with mode_compute=6
+mh_scale_fname = [M_.fname '_optimal_mh_scale_parameter.mat'];
+if exist(mh_scale_fname)
+    if options_.mode_compute == 0
+        tmp = load(mh_scale_fname,'Scale');
+        options_.mh_jscale = tmp.Scale;
+        clear tmp;
+    else
+        % remove the file if mode_compute ~= 0
+        delete(mh_scale_fname)
+    end
+end
+
 % If jscale isn't specified for an estimated parameter, use global option options_.jscale, set to 0.2, by default.
 k = find(isnan(bayestopt_.jscale));
 bayestopt_.jscale(k) = options_.mh_jscale;
