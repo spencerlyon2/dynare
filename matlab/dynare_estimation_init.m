@@ -518,7 +518,7 @@ end
 
 % load optimal_mh_scale parameter if previous run was with mode_compute=6
 mh_scale_fname = [M_.fname '_optimal_mh_scale_parameter.mat'];
-if exist(mh_scale_fname)
+if exist(mh_scale_fname,'file')
     if options_.mode_compute == 0
         tmp = load(mh_scale_fname,'Scale');
         options_.mh_jscale = tmp.Scale;
