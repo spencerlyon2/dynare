@@ -733,8 +733,13 @@ cannot be named @file{test.mod}.
 
 @item noclearall
 By default, @code{dynare} will issue a @code{clear all} command to
-MATLAB or Octave, thereby deleting all workspace variables; this option
-instructs @code{dynare} not to clear the workspace
+MATLAB (<R2015b) or Octave, thereby deleting all workspace variables and
+functions; this option instructs @code{dynare} not to clear the
+workspace. Note that starting with Matlab 2015b @code{dynare} only
+deletes the global variables and the functions using persistent
+variables, in order to benefit from the JIT (Just In Time)
+compilation. In this case the option instructs @code{dynare} not to
+clear the globals and functions.
 
 @item onlyclearglobals
 By default, @code{dynare} will issue a @code{clear all} command to
@@ -5275,6 +5280,10 @@ Available options are:
 
 @table @code
 
+@item 'CMAESResume'
+Resume previous run. Requires the @code{variablescmaes.mat} from the last run. 
+Set to 1 to enable. Default: @code{0}
+
 @item 'MaxIter'
 Maximum number of iterations.
 
@@ -5835,12 +5844,14 @@ Standard deviation of structural shocks
 
 
 @defvr {MATLAB/Octave variable} oo_.MarginalDensity.LaplaceApproximation
-Variable set by the @code{estimation} command.
+Variable set by the @code{estimation} command. Stores the marginal data density 
+based on the Laplace Approximation.
 @end defvr
 
 @defvr {MATLAB/Octave variable} oo_.MarginalDensity.ModifiedHarmonicMean
 Variable set by the @code{estimation} command, if it is used with
-@code{mh_replic > 0} or @code{load_mh_file} option.
+@code{mh_replic > 0} or @code{load_mh_file} option. Stores the marginal data density 
+based on @cite{Geweke (1999)} Modified Harmonic Mean estimator.
 @end defvr
 
 @defvr {MATLAB/Octave variable} oo_.FilteredVariables
@@ -6175,6 +6186,20 @@ Dynare: it is the user's responsibility to make sure that model comparison is
 based on proper priors. Note that, for obvious reasons, this is not an issue if
 the compared marginal densities are based on Laplace approximations.
 
+@optionshead
+
+@table @code
+
+@item marginal_density = @var{ESTIMATOR}
+Specifies the estimator for computing the marginal data density. @var{ESTIMATOR} can 
+take one of the following two values:
+@code{laplace} for the Laplace estimator or @code{modifiedharmonicmean} for the 
+@cite{Geweke (1999)} Modified Harmonic Mean estimator. Default value: @code{laplace}
+@end table
+
+@outputhead
+
+The results are stored in @code{oo_.Model_Comparison}, which is described below.
 
 @examplehead
 
@@ -6185,6 +6210,32 @@ This example attributes a 70% prior over @code{my_model} and 30% prior
 over @code{alt_model}.
 
 @end deffn
+
+@defvr {MATLAB/Octave variable} oo_.Model_Comparison
+Variable set by the @code{model_comparison} command. Fields are of the form:
+@example
+@code{oo_.Model_Comparison.@var{FILENAME}.@var{VARIABLE_NAME}}
+@end example
+where @var{FILENAME} is the file name of the model and @var{VARIABLE_NAME} is one of the following:
+
+@table @code
+
+@item Prior
+(Normalized) prior density over the model
+
+@item Log_Marginal_Density
+Logarithm of the marginal data density
+
+@item Bayes_Ratio
+Ratio of the marginal data density of the model relative to the one of the first declared model
+
+@item Posterior_Model_Probability
+Posterior probability of the respective model
+
+@end table
+
+@end defvr
+
 
 @deffn Command shock_decomposition [@var{VARIABLE_NAME}]@dots{};
 @deffnx Command shock_decomposition (@var{OPTIONS}@dots{}) [@var{VARIABLE_NAME}]@dots{};
@@ -12751,6 +12802,39 @@ Baseline New Keynesian Model estimated in @cite{Fernández-Villaverde (2010)}. I
 @node Dynare misc commands
 @chapter Dynare misc commands
 
+@anchor{prior_posterior_function}
+@deffn {MATLAB/Octave command} @var{output_cell_name}=prior_posterior_function('@var{function_name_string}','@var{prior_posterior_selector}',@var{OPTIONS})
+Executes a user-defined function on parameter draws from the prior or posterior distribution. The function 
+provided using the @var{function_name_string} must have the following header
+@code{output_cell =FILENAME(xparam1,M_,options_,oo_,estim_params_,bayestopt_,dataset_,dataset_info)}. 
+It allows read-only access to all Dynare structures. The only output argument allowed is a 1 by n cell array, 
+which allows for storing any type of output/computations. Dynare returns the results of the 
+computations for all draws in a ndraws by n cell array named @var{output_cell_name}.
+
+@optionshead
+
+@table @code
+
+@item prior_posterior_selector 
+
+Available options are
+@table @code
+
+@item 'prior'
+Executes the user-defined function on draws from the prior
+
+@item 'posterior'
+Executes the user-defined function on draws from the posterior
+
+@end table
+
+@item prior_posterior_sampling_draws
+Number of draws used for sampling. Default: 500.
+
+@end table
+
+@end deffn
+
 @anchor{internals}
 @deffn {MATLAB/Octave command} internals @var{FLAG} @var{ROUTINENAME}[.m]|@var{MODFILENAME}
 
@@ -12824,7 +12908,6 @@ A @code{1*Nblck} array of doubles. Current acceptance ratios.
 @end table
 
 @end deffn
-
 
 @node Bibliography
 @chapter Bibliography

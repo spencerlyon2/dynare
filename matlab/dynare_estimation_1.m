@@ -446,16 +446,16 @@ if (any(bayestopt_.pshape  >0 ) && options_.mh_replic) || ...
         else
             posterior_sampler(objective_function,options_.proposal_distribution,xparam1,posterior_sampler_options,bounds,dataset_,dataset_info,options_,M_,estim_params_,bayestopt_,oo_);
         end
-        options_.analytic_derivation = ana_deriv_old;
+        options_.analytic_derivation = ana_deriv_old;        
     end
-    %% Here i discard the first mh_drop of the draws:
-    CutSample(M_, options_, estim_params_);
     if options_.mh_posterior_mode_estimation
+        CutSample(M_, options_, estim_params_);
         return
     else
         if ~options_.nodiagnostic && options_.mh_replic>0
             oo_= McMCDiagnostics(options_, estim_params_, M_,oo_);
         end
+        CutSample(M_, options_, estim_params_);
         %% Estimation of the marginal density from the Mh draws:
         if options_.mh_replic
             [marginal,oo_] = marginal_density(M_, options_, estim_params_, oo_, bayestopt_);
@@ -471,7 +471,7 @@ if (any(bayestopt_.pshape  >0 ) && options_.mh_replic) || ...
         else
             load([M_.fname '_results'],'oo_');
         end
-        error_flag = metropolis_draw(1);
+        [error_flag,junk,options_]= metropolis_draw(1,options_,estim_params_,M_);
         if options_.bayesian_irf
             if error_flag
                 error('Estimation::mcmc: I cannot compute the posterior IRFs!')

@@ -3,6 +3,7 @@ MODFILES = \
 	estimation/fs2000_MCMC_jumping_covariance.mod \
 	estimation/fs2000_initialize_from_calib.mod	\
 	estimation/fs2000_calibrated_covariance.mod \
+	estimation/fs2000_model_comparison.mod \
 	estimation/MH_recover/fs2000_recover.mod \
 	estimation/t_proposal/fs2000_student.mod \
 	estimation/TaRB/fs2000_tarb.mod \
@@ -45,6 +46,7 @@ MODFILES = \
 	optimal_policy/Ramsey/Gali_commitment.mod \
 	optimal_policy/RamseyConstraints/test1.mod \
 	discretionary_policy/dennis_1.mod \
+	discretionary_policy/Gali_discretion.mod \
 	initval_file/ramst_initval_file.mod \
 	ramst_normcdf_and_friends.mod \
 	ramst_vec.mod \
@@ -144,6 +146,7 @@ MODFILES = \
 	recursive/ls2003.mod \
 	recursive/ls2003_bayesian.mod \
 	recursive/ls2003_bayesian_xls.mod \
+	recursive/ls2003_bayesian_csv.mod \
 	ms-sbvar/test_exclusions.mod \
 	ms-sbvar/test_exclusions_nc.mod \
 	ms-sbvar/test_lower_cholesky.mod \
@@ -244,6 +247,7 @@ MODFILES = \
 	optimizers/fs2000_w.mod \
 	differentiate_forward_vars/RBC_differentiate_forward.mod \
 	TeX/fs2000_corr_ME.mod \
+	prior_posterior_function/fs2000_prior_posterior_function.mod \
 	reporting/example1.mod
 
 XFAIL_MODFILES = ramst_xfail.mod \
@@ -296,6 +300,9 @@ AIM/fs2000x10L9_L_AIM.o.trs: AIM/fs2000x10L9_L.o.trs
 AIM/fs2000x10_L9_L_AIM.o.trs: AIM/fs2000x10_L9_L.o.trs
 AIM/ls2003_2L0L_AIM.o.trs: AIM/ls2003_2L0L.o.trs
 AIM/ls2003_2L2L_AIM.o.trs: AIM/ls2003_2L2L.o.trs
+
+estimation/fs2000_model_comparison.m.trs: estimation/fs2000.m.trs estimation/fs2000_initialize_from_calib.m.trs estimation/fs2000_calibrated_covariance.m.trs
+estimation/fs2000_model_comparison.o.trs: estimation/fs2000.o.trs estimation/fs2000_initialize_from_calib.o.trs estimation/fs2000_calibrated_covariance.o.trs
 
 optimizers/fs2000_102.m.trs: estimation/fs2000.m.trs
 optimizers/fs2000_102.o.trs: estimation/fs2000.o.trs
@@ -449,7 +456,9 @@ EXTRA_DIST = \
 	optimal_policy/Ramsey/find_c.m \
 	optimal_policy/Ramsey/oo_ramsey_policy_initval.mat \
 	optimizers/optimizer_function_wrapper.m \
-	optimizers/fs2000.common.inc
+	optimizers/fs2000.common.inc \
+	prior_posterior_function/posterior_function_demo.m
+
 
 TARGETS =
 TEXTOUT =
@@ -464,8 +473,10 @@ TARGETS += check-octave
 TEXTOUT += run_test_octave_output.txt
 endif
 
-check-local: $(TARGETS) $(TEXTOUT)
+check-local: $(TEXTOUT)
 	@cat $(TEXTOUT)
+
+$(TEXTOUT): $(TARGETS)
 
 check-matlab: $(M_XFAIL_TRS_FILES) $(M_TRS_FILES)
 	./read_trs_files.sh "$(M_TRS_FILES)" "$(M_XFAIL_TRS_FILES)"
