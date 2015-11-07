@@ -1436,23 +1436,24 @@ StaticModel::writeStaticModel(ostream &StaticOutput, bool use_dll, bool julia) c
     }
   else
     {
-      ostringstream comments;
-      comments << "## Function Arguments" << endl
-               << endl
-               << "## Input" << endl
-               << " 1 y:         Array{Float64, length(model.endo), 1}             Vector of endogenous variables in declaration order" << endl
-               << " 2 x:         Array{Float64, length(model.exo), 1}              Vector of exogenous variables in declaration order" << endl
-               << " 3 params:    Array{Float64, length(model.param), 1}            Vector of parameter values in declaration order" << endl
-               << endl
-               << "## Output" << endl
-               << " 4 residual:  Array(Float64, model.eq_nbr, 1)                   Vector of residuals of the static model equations" << endl
-               << "                                                                in order of declaration of the equations." << endl
-               << "                                                                Dynare may prepend auxiliary equations, see model.aux_vars" << endl;
+      ostringstream docstring;
+      docstring << "## Function Arguments" << endl
+                << endl
+                << "## Input" << endl << endl
+                << "1. `y::Vector{Float64}`: Endogenous variables in declaration order (length(model.endo))" << endl
+                << "2. `x::Vector{Float64}`: Exogenous variables in declaration order (length(model.exo))" << endl
+                << "3. `params::Vector{Float64}`: Parameter values in declaration order (length(model.param))" << endl
+                << endl
+                << "## Output" << endl << endl
+                << "4. `residual::Vector{Float64}`: Vector of residuals of the static model in order of" << endl
+                << "   declaration of the equations. Dynare may prepend auxiliary equations, see" << endl
+                << "   `model.aux_vars` (length(model.eq_nbr))" << endl;
 
-      StaticOutput << "function static!(y::Vector{Float64}, x::Vector{Float64}, "
+
+      StaticOutput << "\"\"\"" << endl << docstring.str() << "\"\"\"" << endl
+                   << "function static!(y::Vector{Float64}, x::Vector{Float64}, "
                    << "params::Vector{Float64}," << endl
                    << "                 residual::Vector{Float64})" << endl
-                   << "#=" << endl << comments.str() << "=#" << endl
                    << "  @assert size(y) == " << symbol_table.endo_nbr() << endl
                    << "  @assert size(x) == " << symbol_table.exo_nbr() << endl
                    << "  @assert size(params) == " << symbol_table.param_nbr() << endl
@@ -1462,19 +1463,19 @@ StaticModel::writeStaticModel(ostream &StaticOutput, bool use_dll, bool julia) c
                    << "  #" << endl
                    << model_output.str()
                    << model_eq_output.str()
-                   << "if ~isreal(residual)" << endl
-                   << "  residual = real(residual)+imag(residual).^2;" << endl
-                   << "end" << endl
-                   << "end" << endl << endl
+                   << "  if ~isreal(residual)" << endl
+                   << "    residual = real(residual)+imag(residual).^2;" << endl
+                   << "  end" << endl
+                   << "end" << endl << endl;
+
+      docstring << "5. `g1::Matrix{Float64}`: Jacobian matrix of the static model equations;" << endl
+                << "   columns: length(model.eq_nbr) variables in declaration order" << endl
+                << "   rows: length(model.endo) equations in order of declaration" << endl;
+
+      StaticOutput << "\"\"\"" << endl << docstring.str() << "\"\"\"" << endl
                    << "function static!(y::Vector{Float64}, x::Vector{Float64}, "
                    << "params::Vector{Float64}," << endl
-                   << "                 residual::Vector{Float64}, g1::Matrix{Float64})" << endl;
-
-      comments << " 5 g1:        Array(Float64, model.eq_nbr, length(model.endo))  Jacobian matrix of the static model equations;" << endl
-               << "                                                                columns: variables in declaration order" << endl
-               << "                                                                rows: equations in order of declaration" << endl;
-
-      StaticOutput << "#=" << endl << comments.str() << "=#" << endl
+                   << "                 residual::Vector{Float64}, g1::Matrix{Float64})" << endl
                    << "  @assert size(g1) == (" << equations.size() << ", " << symbol_table.endo_nbr()
                    << ")" << endl
                    << "  fill!(g1, 0.0)" << endl
@@ -1487,17 +1488,17 @@ StaticModel::writeStaticModel(ostream &StaticOutput, bool use_dll, bool julia) c
                    << "  if ~isreal(g1)" << endl
                    << "    g1 = real(g1)+2*imag(g1);" << endl
                    << "  end" << endl
-                   << "end" << endl << endl
+                   << "end" << endl << endl;
+
+      docstring << "6. `g2::AbstractMatrix{Float64}`: Hessian matrix of the static model equations;" << endl
+                << "   columns: length(model.eq_nbr) variables in declaration order" << endl
+                << "   rows: (length(model.endo)^2) equations in order of declaration" << endl;
+
+      StaticOutput << "\"\"\"" << endl << docstring.str() << "\"\"\"" << endl
                    << "function static!(y::Vector{Float64}, x::Vector{Float64}, "
                    << "params::Vector{Float64}," << endl
                    << "                 residual::Vector{Float64}, g1::Matrix{Float64}, "
-                   << "g2::Matrix{Float64})" << endl;
-
-      comments << " 6 g2:        spzeros(model.eq_nbr, length(model.endo)^2)       Hessian matrix of the static model equations;" << endl
-               << "                                                                columns: variables in declaration order" << endl
-               << "                                                                rows: equations in order of declaration" << endl;
-
-      StaticOutput << "#=" << endl << comments.str() << "=#" << endl
+                   << "g2::AbstractMatrix{Float64})" << endl
                    << "  @assert size(g2) == (" << equations.size() << ", " << g2ncols << ")" << endl
                    << "  static!(y, x, params, residual, g1)" << endl;
       if (second_derivatives.size())
@@ -1509,18 +1510,18 @@ StaticModel::writeStaticModel(ostream &StaticOutput, bool use_dll, bool julia) c
 
       // Initialize g3 matrix
       int ncols = hessianColsNbr * JacobianColsNbr;
-      StaticOutput << "end" << endl << endl
+      StaticOutput << "end" << endl << endl;
+
+      docstring << "7. `g3::AbstractMatrix{Float64}`: Third derivatives matrix of the static model equations;" << endl
+                << "   columns: length(model.eq_nbr) variables in declaration order" << endl
+                << "   rows: (length(model.endo)^3) equations in order of declaration" << endl;
+
+      StaticOutput << "\"\"\"" << endl << docstring.str() << "\"\"\"" << endl
                    << "function static!(y::Vector{Float64}, x::Vector{Float64}, "
                    << "params::Vector{Float64}," << endl
                    << "                 residual::Vector{Float64}, g1::Matrix{Float64}, "
-                   << "g2::Matrix{Float64}," << endl
-                   << "                 g3::Matrix{Float64})" << endl;
-
-      comments << " 7 g3:        spzeros(model.eq_nbr, length(model.endo)^3)       Third derivatives matrix of the static model equations;" << endl
-               << "                                                                columns: variables in declaration order" << endl
-               << "                                                                rows: equations in order of declaration" << endl;
-
-      StaticOutput << "#=" << endl << comments.str() << "=#" << endl
+                   << "g2:::AbstractMatrix{Float64}," << endl
+                   << "                 g3:::AbstractMatrix{Float64})" << endl
                    << "  @assert size(g3) == (" << nrows << ", " << ncols << ")" << endl
                    << "  static!(y, x, params, residual, g1, g2)" << endl;
       if (third_derivatives.size())
