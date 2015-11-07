@@ -189,7 +189,7 @@ void DynareModel::check_model() const
 		sprintf(mes, "Model has %d equations for %d endogenous variables", eqs.nformulas(), atoms.ny());
 		throw DynareException(__FILE__, __LINE__, mes);
 	}
-	
+
 	// check whether all nulary terms of all formulas in eqs are
 	// either constant or assigned to a name
 	for (int i = 0; i < eqs.nformulas(); i++) {
@@ -560,7 +560,7 @@ int DynareParser::parse_pldiscount(int len, const char* str)
 
 	delete [] buf;
 	return t;
-}	
+}
 
 void DynareParser::calc_params()
 {
@@ -725,6 +725,7 @@ void ModelSSWriter::write_der0(FILE* fd)
 		otree.print_operation_tree(model.eqs.formula(fi), fd, *this);
 
 	write_der0_assignment(fd);
+	fprintf(fd, "\n\nreturn out\n\nend");
 }
 
 void ModelSSWriter::write_der1(FILE* fd)
@@ -746,6 +747,7 @@ void ModelSSWriter::write_der1(FILE* fd)
 	}
 
 	write_der1_assignment(fd);
+	fprintf(fd, "\n\nreturn out\n\nend");
 }
 
 MatlabSSWriter::MatlabSSWriter(const DynareModel& dm, const char* idd)
@@ -758,72 +760,72 @@ MatlabSSWriter::MatlabSSWriter(const DynareModel& dm, const char* idd)
 void MatlabSSWriter::write_der0_preamble(FILE* fd) const
 {
 	fprintf(fd,
-			"%% Usage:\n"
-			"%%       out = %s_f(params, y)\n"
-			"%%   where\n"
-			"%%       out    is a (%d,1) column vector of the residuals\n"
-            "%%              of the static system\n",
+			"# Usage:\n"
+			"#       out = %s_f(params, y)\n"
+			"#   where\n"
+			"#       out    is a (%d,1) column vector of the residuals\n"
+            "#              of the static system\n",
 			id, model.getAtoms().ny());
 	write_common1_preamble(fd);
 	fprintf(fd,
-			"function out = %s_f(params, y)\n", id);
+			"function %s_f(params, y)\n", id);
 	write_common2_preamble(fd);
 }
 
 void MatlabSSWriter::write_der1_preamble(FILE* fd) const
 {
 	fprintf(fd,
-			"%% Usage:\n"
-			"%%       out = %s_ff(params, y)\n"
-			"%%   where\n"
-			"%%       out    is a (%d,%d) matrix of the first order\n"
-			"%%              derivatives of the static system residuals\n"
-			"%%              columns correspond to endo variables in\n"
-            "%%              the ordering as declared\n",
+			"# Usage:\n"
+			"#       out = %s_ff(params, y)\n"
+			"#   where\n"
+			"#       out    is a (%d,%d) matrix of the first order\n"
+			"#              derivatives of the static system residuals\n"
+			"#              columns correspond to endo variables in\n"
+            "#              the ordering as declared\n",
 			id, model.getAtoms().ny(), model.getAtoms().ny());
 	write_common1_preamble(fd);
 	fprintf(fd,
-			"function out = %s_ff(params, y)\n", id);
+			"function %s_ff(params, y)\n", id);
 	write_common2_preamble(fd);
 }
 
 void MatlabSSWriter::write_common1_preamble(FILE* fd) const
 {
 	fprintf(fd,
-			"%%       params is a (%d,1) vector of parameter values\n"
-			"%%              in the ordering as declared\n"
-			"%%       y      is a (%d,1) vector of endogenous variables\n"
-			"%%              in the ordering as declared\n"
-			"%%\n"
-			"%% Created by Dynare++ v. %s\n", model.getAtoms().np(),
+			"#       params is a (%d,1) vector of parameter values\n"
+			"#              in the ordering as declared\n"
+			"#       y      is a (%d,1) vector of endogenous variables\n"
+			"#              in the ordering as declared\n"
+			"#\n"
+			"# Created by Dynare++ v. %s\n", model.getAtoms().np(),
 			model.getAtoms().ny(), DYNVERSION);
 	// write ordering of parameters
-	fprintf(fd, "\n%% params ordering\n%% =====================\n");
+	fprintf(fd, "\n# params ordering\n# =====================\n");
 	for (unsigned int ip = 0; ip < model.getAtoms().get_params().size(); ip++) {
 		const char* parname = model.getAtoms().get_params()[ip];
-		fprintf(fd, "%% %s\n", parname);
+		fprintf(fd, "# %s\n", parname);
 	}
 	// write endogenous variables
-	fprintf(fd, "%%\n%% y ordering\n%% =====================\n");
+	fprintf(fd, "#\n# y ordering\n# =====================\n");
 	for (unsigned int ie = 0; ie < model.getAtoms().get_endovars().size(); ie++) {
 		const char* endoname = model.getAtoms().get_endovars()[ie];
-		fprintf(fd, "%% %s\n", endoname);
+		fprintf(fd, "# %s\n", endoname);
 	}
 	fprintf(fd,"\n");
 }
 
 void MatlabSSWriter::write_common2_preamble(FILE* fd) const
 {
-	fprintf(fd, "if size(y) ~= [%d,1]\n\terror('Wrong size of y, must be [%d,1]');\nend\n",
+	fprintf(fd, "if size(y) != (%d,)\n\terror(\"Wrong size of y, must be (%d,)\");\nend\n",
 			model.getAtoms().ny(), model.getAtoms().ny());
-	fprintf(fd, "if size(params) ~= [%d,1]\n\terror('Wrong size of params, must be [%d,1]');\nend\n\n",
+	fprintf(fd, "if size(params) != (%d,)\n\terror(\"Wrong size of params, must be (%d)\");\nend\n\n",
 			model.getAtoms().np(), model.getAtoms().np());
 }
 
 void MatlabSSWriter::write_atom_assignment(FILE* fd) const
 {
 	// write OperationTree::num_constants
-	fprintf(fd, "%% hardwired constants\n");
+	fprintf(fd, "# hardwired constants\n");
 	ogp::EvalTree etree(model.getParser().getTree(), ogp::OperationTree::num_constants-1);
 	for (int i = 0; i < ogp::OperationTree::num_constants; i++) {
 		format_nulary(i, fd);
@@ -831,10 +833,10 @@ void MatlabSSWriter::write_atom_assignment(FILE* fd) const
 		if (std::isnan(g))
 			fprintf(fd, " = NaN;\n");
 		else
-			fprintf(fd, " = %12.8g;\n", etree.eval(i));		
+			fprintf(fd, " = %12.8g;\n", etree.eval(i));
 	}
 	// write numerical constants
-	fprintf(fd, "%% numerical constants\n");
+	fprintf(fd, "# numerical constants\n");
 	const ogp::Constants::Tconstantmap& cmap = model.getAtoms().get_constantmap();
 	for (ogp::Constants::Tconstantmap::const_iterator it = cmap.begin();
 		 it != cmap.end(); ++it) {
@@ -842,19 +844,19 @@ void MatlabSSWriter::write_atom_assignment(FILE* fd) const
 		fprintf(fd, " = %12.8g;\n", (*it).second);
 	}
 	// write parameters
-	fprintf(fd, "%% parameter values\n");
+	fprintf(fd, "# parameter values\n");
 	for (unsigned int ip = 0; ip < model.getAtoms().get_params().size(); ip++) {
 		const char* parname = model.getAtoms().get_params()[ip];
 		int t = model.getAtoms().index(parname, 0);
 		if (t == -1) {
-			fprintf(fd, "%% %s not used in the model\n", parname);
+			fprintf(fd, "# %s not used in the model\n", parname);
 		} else {
 			format_nulary(t, fd);
-			fprintf(fd, " = params(%d); %% %s\n", ip+1, parname);
+			fprintf(fd, " = params[%d]; # %s\n", ip+1, parname);
 		}
 	}
 	// write exogenous variables
-	fprintf(fd, "%% exogenous variables to zeros\n");
+	fprintf(fd, "# exogenous variables to zeros\n");
 	for (unsigned int ie = 0; ie < model.getAtoms().get_exovars().size(); ie++) {
 		const char* exoname = model.getAtoms().get_exovars()[ie];
 		try {
@@ -862,21 +864,21 @@ void MatlabSSWriter::write_atom_assignment(FILE* fd) const
 			for (ogp::DynamicAtoms::Tlagmap::const_iterator it = lmap.begin();
 				 it != lmap.end(); ++it) {
 				format_nulary((*it).second, fd);
-				fprintf(fd, " = 0.0; %% %s\n", exoname);
+				fprintf(fd, " = 0.0; # %s\n", exoname);
 			}
 		} catch (const ogu::Exception& e) {
 			// ignore the error of not found variable in the tree
 		}
 	}
 	// write endogenous variables
-	fprintf(fd, "%% endogenous variables to y\n");
+	fprintf(fd, "# endogenous variables to y\n");
 	for (unsigned int ie = 0; ie < model.getAtoms().get_endovars().size(); ie++) {
 		const char* endoname = model.getAtoms().get_endovars()[ie];
 		const ogp::DynamicAtoms::Tlagmap& lmap = model.getAtoms().lagmap(endoname);
 		for (ogp::DynamicAtoms::Tlagmap::const_iterator it = lmap.begin();
 			 it != lmap.end(); ++it) {
 			format_nulary((*it).second, fd);
-			fprintf(fd, " = y(%d); %% %s\n", ie+1, endoname);
+			fprintf(fd, " = y[%d]; # %s\n", ie+1, endoname);
 		}
 	}
 	fprintf(fd,"\n");
@@ -886,12 +888,12 @@ void MatlabSSWriter::write_der0_assignment(FILE* fd) const
 {
 
 	// initialize out variable
-	fprintf(fd, "%% setting the output variable\n");
+	fprintf(fd, "# setting the output variable\n");
 	fprintf(fd, "out = zeros(%d, 1);\n", model.getParser().nformulas());
 
 	// fill out with the terms
 	for (int i = 0; i < model.getParser().nformulas(); i++) {
-		fprintf(fd, "out(%d) = ", i+1);
+		fprintf(fd, "out[%d] = ", i+1);
 		format_term(model.getParser().formula(i), fd);
 		fprintf(fd, ";\n");
 	}
@@ -900,7 +902,7 @@ void MatlabSSWriter::write_der0_assignment(FILE* fd) const
 void MatlabSSWriter::write_der1_assignment(FILE* fd) const
 {
 	// initialize out variable
-	fprintf(fd, "%% setting the output variable\n");
+	fprintf(fd, "# setting the output variable\n");
 	fprintf(fd, "out = zeros(%d, %d);\n", model.getParser().nformulas(), model.getAtoms().ny());
 
 	// fill out with the terms
@@ -914,9 +916,9 @@ void MatlabSSWriter::write_der1_assignment(FILE* fd) const
 			int yi = model.getAtoms().name2outer_endo(name);
 			int t = fder.derivative(ogp::FoldMultiIndex(variables.size(), 1, eam[j]));
 			if (t != ogp::OperationTree::zero) {
-				fprintf(fd, "out(%d,%d) = out(%d,%d) + ", i+1, yi+1, i+1, yi+1);
+				fprintf(fd, "out[%d,%d] = out[%d,%d] + ", i+1, yi+1, i+1, yi+1);
 				format_term(t, fd);
-				fprintf(fd, "; %% %s(%d)\n", name, model.getAtoms().lead(tvar));
+				fprintf(fd, "; # %s(%d)\n", name, model.getAtoms().lead(tvar));
 			}
 		}
 	}

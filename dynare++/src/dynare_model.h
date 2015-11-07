@@ -106,7 +106,7 @@ namespace ogdyn {
 		DynareModel();
 		/** Construct a new deep copy. */
 		DynareModel(const DynareModel& dm);
-		virtual ~DynareModel();		
+		virtual ~DynareModel();
 		virtual DynareModel* clone() const = 0;
 		const DynareDynamicAtoms& getAtoms() const
 			{return atoms;}
@@ -121,7 +121,7 @@ namespace ogdyn {
 			{return *param_vals;}
 		/** Return the vector of initial values of endo variables. */
 		const Vector& getInit() const
-			{return *init_vals;} 
+			{return *init_vals;}
 		Vector& getInit()
 			{return *init_vals;}
 		/** Return the vcov matrix. */
@@ -175,7 +175,7 @@ namespace ogdyn {
 		/** This returns maximum lead and minimum lag of an endogenous
 		 * or exogenous variable in the given term. If there are no
 		 * endo or exo variables, than it returns the least integer as
-		 * max lead and the greatest integer as min lag. */ 
+		 * max lead and the greatest integer as min lag. */
 		void termspan(int t, int& mlead, int& mlag) const;
 		/** This function returns a set of non-linear subterms of the
 		 * given term, these are terms whose linear combination
@@ -252,7 +252,7 @@ namespace ogdyn {
 		/** Sets position of the planner_discount section. Called from
 		 * dynglob.y. */
 		void set_pl_discount_pos(int off1, int off2)
-			{pldiscount_beg = off1; pldiscount_end = off2;}		
+			{pldiscount_beg = off1; pldiscount_end = off2;}
 		/** Processes a syntax error from bison. */
 		void error(const char* mes);
 		/** Debug print. */

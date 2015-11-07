@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 		// write matlab files
 		FILE* mfd;
 		std::string mfile1(params.basename);
-		mfile1 += "_f.m";
+		mfile1 += "_f.jl";
 		if (NULL == (mfd=fopen(mfile1.c_str(), "w"))) {
 			fprintf(stderr, "Couldn't open %s for writing.\n", mfile1.c_str());
 			exit(1);
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 		fclose(mfd);
 
 		std::string mfile2(params.basename);
-		mfile2 += "_ff.m";
+		mfile2 += "_ff.jl";
 		if (NULL == (mfd=fopen(mfile2.c_str(), "w"))) {
 			fprintf(stderr, "Couldn't open %s for writing.\n", mfile2.c_str());
 			exit(1);
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 			e.print();
 			JournalRecord rec(journal);
 			rec << "Solution routine not finished (" << e.get_message()
-				<< "), see what happens" << endrec; 
+				<< "), see what happens" << endrec;
 		}
 
 		std::string ss_matrix_name(params.prefix);
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 			SimResultsStats res(dynare.numeq(), params.num_per, params.num_burn);
 			res.simulate(params.num_sim, dr, dynare.getSteady(), dynare.getVcov(), journal);
 			res.writeMat(matfd, params.prefix);
-			
+
 			// impulse response functions
 			if (! irf_list_ind.empty()) {
 				IRFResults irf(dynare, dr, res, irf_list_ind, journal);
