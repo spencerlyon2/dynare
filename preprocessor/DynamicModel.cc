@@ -1583,7 +1583,7 @@ DynamicModel::writeDynamicJuliaFile(const string &basename) const
          << "using Utils" << endl << endl
          << "export dynamic!" << endl << endl;
   writeDynamicModel(output, false, true);
-  output << "end" << endl;
+  output << "end  # module" << endl;
   output.close();
 }
 
@@ -4115,7 +4115,7 @@ DynamicModel::writeParamsDerivativesFile(const string &basename, bool julia) con
   if (julia)
     paramsDerivsFile << "(rp, gp, rpp, gpp, hp)" << endl;
   paramsDerivsFile << "end" << endl
-                   << "end" << endl;
+                   << "end  # module" << endl;
   paramsDerivsFile.close();
 }
 

@@ -20,7 +20,7 @@ module Utils
 
 export get_power_deriv
 
-function get_power_deriv(x::Float64, p::Real, k::Int)
+@inline function get_power_deriv(x::Float64, p::Real, k::Int)
     if abs(x)<1e-12 && p>0 && k>p && typeof(p)==Int
         dxp = .0
     else

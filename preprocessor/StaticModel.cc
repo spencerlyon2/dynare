@@ -1520,8 +1520,8 @@ StaticModel::writeStaticModel(ostream &StaticOutput, bool use_dll, bool julia) c
                    << "function static!(y::Vector{Float64}, x::Vector{Float64}, "
                    << "params::Vector{Float64}," << endl
                    << "                 residual::Vector{Float64}, g1::Matrix{Float64}, "
-                   << "g2:::AbstractMatrix{Float64}," << endl
-                   << "                 g3:::AbstractMatrix{Float64})" << endl
+                   << "g2::AbstractMatrix{Float64}," << endl
+                   << "                 g3::AbstractMatrix{Float64})" << endl
                    << "  @assert size(g3) == (" << nrows << ", " << ncols << ")" << endl
                    << "  static!(y, x, params, residual, g1, g2)" << endl;
       if (third_derivatives.size())
@@ -1665,7 +1665,7 @@ StaticModel::writeStaticJuliaFile(const string &basename) const
          << "using Utils" << endl << endl
          << "export static!" << endl << endl;
   writeStaticModel(output, false, true);
-  output << "end" << endl;
+  output << "end  # module" << endl;
 }
 
 void

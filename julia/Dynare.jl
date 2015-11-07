@@ -18,27 +18,23 @@ module Dynare
  # along with Dynare.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-export dynare, @dynare
+export @dynare
 
-function dynare(modfile)
-    # Add cd to path if not already there
-    if isempty(findin([pwd()], LOAD_PATH))
-        unshift!(LOAD_PATH, pwd())
-    end
-
+function _dynare(modfile)
     # Process modfile
     println(string("Using ", WORD_SIZE, "-bit preprocessor"))
     preprocessor = string(dirname(@__FILE__()), "/preprocessor", WORD_SIZE, "/dynare_m")
     run(`$preprocessor $modfile language=julia output=dynamic`)
 
     # Load module created by preprocessor
-    basename = split(modfile, ".mod"; keep=false)
-    require(basename[1])
+    basename = split(modfile, ".mod"; keep=false)[1]
+    Expr(:block, Expr(:call, :include, "$basename.jl"),
+                 Expr(:import, symbol("."), symbol(basename)))
 end
 
 
 macro dynare(modelname)
-    :(dynare($modelname))
+    _dynare(modelname)
 end
 
-end
+end  # module
